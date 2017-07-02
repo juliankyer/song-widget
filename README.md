@@ -11,13 +11,9 @@ Here's how you could do it.
 
 ### Set-Up
 
-Get a new Create React App up and running, and clear out all of the stock content that comes with it.
+Get a new Create React App up and running, and clear out all of the stock content that comes with it: ```create-react-app song-widget```
 
-```create-react-app song-widget```
-
-Then, install your dependencies. We'll cover these as we go.
-
-```npm install --save isomorphic-fetch redux redux-logger redux-thunk react-redux babel-polyfill```
+Then, install your dependencies. We'll cover these as we go: ```npm install --save isomorphic-fetch redux redux-logger redux-thunk react-redux babel-polyfill```
 
 ### index.js
 
@@ -27,23 +23,15 @@ Our ```index.js``` will look like this:
 import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
-
-// thunk let's us write action-creators that return functions, not just the plain objects Redux typically requires
-import thunk from 'redux-thunk';
-
-// logger is a neat package that console logs information about the Redux store
-import logger from 'redux-logger';
-
 import { createStore, applyMiddleware } from 'redux';
 
+import thunk from 'redux-thunk';
+import logger from 'redux-logger';
+
 import './index.css';
-
-// containers are how Redux and React components are connected
 import AppContainer from './containers/AppContainer';
-
 import rootReducer from './reducers/index';
 
-// this says "hey, if you have the Redux devTools extension, let it look at the store"
 const devTools = window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
 
 const store = createStore(rootReducer, devTools, applyMiddleware(logger, thunk));
@@ -56,7 +44,15 @@ const Root = () => {
   )
 }
 
-render(<Root />, document.getElementById('root'));```
+render(<Root />, document.getElementById('root'));
+```
+
+Some takeaways:
+* thunk let's us write action-creators that return functions, not just the plain objects Redux typically requires
+* logger is a neat package that console logs information about the Redux store
+* containers are how Redux and React components are connected
+* devTools says "hey, if you have the Redux devTools extension, let it look at the store"
+*
 
 In our index, we set instantiate our store using the createStore method, and we extend React with both logger and thunk. We wrap our entire application in a <Provider /> component that makes the store we've created accessible to everything in the app.
 
