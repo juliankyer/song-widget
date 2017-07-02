@@ -1,68 +1,24 @@
-To use this application:
+*To use this application:*
 
-Clone, npm install, and npm start. Open your devTools to see the application's state changes.
+*Clone, npm install, and npm start. Open your devTools to see the application's state changes in the console. TL;DR at the bottom.*
 
+---
 
 ## Making API Calls With React-Redux
 
-Here is an example of making a simple API call with React-Redux. Say you wanted to hit the **EDMTut.r** database, because you need some new songs, and you also want to overly-complicate your life in the event you might scale this app up one day. 
+Here is an example of making a simple API call with React-Redux. Say you wanted to hit the **EDMTut.r** database, because you need some new songs, and you also want to overly-complicate your life in the unlikely event you might scale this app up one day. 
 
 Here's how you could do it.
 
-### Set-Up
+We'll set up the Redux side of things first, and then hook it up to our React application.
 
-Get a new Create React App up and running, and clear out all of the stock content that comes with it: ```$create-react-app song-widget```
-
-Then, install your dependencies. We'll cover these as we go: ```$npm install --save isomorphic-fetch redux redux-logger redux-thunk react-redux babel-polyfill```
-
-### index.js
-
-Our ```index.js``` will look like this:
-
-```javascript
-import React from 'react';
-import { render } from 'react-dom';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import 'babel-polyfill';
-
-import thunk from 'redux-thunk';
-import logger from 'redux-logger';
-
-import './index.css';
-import AppContainer from './containers/AppContainer';
-import rootReducer from './reducers/index';
-
-const devTools = window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
-
-const store = createStore(rootReducer, devTools, applyMiddleware(logger, thunk));
-
-const Root = () => {
-  return (
-    <Provider store={ store }>
-      <AppContainer />
-    </Provider>
-  )
-}
-
-render(<Root />, document.getElementById('root'));
-```
-
-Some takeaways:
-* thunk let's us write action-creators that return functions, not just the plain objects Redux typically requires
-* logger is a neat package that console logs information about the Redux store
-* containers are how Redux and React components are connected
-* devTools says "hey, if you have the Redux devTools extension, let it look at the store"
-* babel-polyfill helps with cross-browser support for the fetch API later on
-
-
-In our index, we instantiate our store using the createStore method, and we extend React with both logger and thunk. We wrap our entire application in a ```<Provider />``` component that makes the store we've created accessible to everything in the app.
+---
 
 ### actions.js
 
-In this simple app, we will have two action-creators. One called ```fetchSongs``` that will take a genre's id as an argument, and will be the action-creator dispatched by the buttons in our ```<App />``` component. If the promise from the API call resolves, our second action-creator will be called.
+Let's start with defining our actions. Dispatching actions is the only way we update our Redux store. Actions are plain JS objects, and we'll be using action-creators (functions that return actions) to create them.
 
-This will fire the synchronous action ```RECEIVED_SONGS```, with a payload of the songs returned by the API call. This payload is an array of objects. The file will look like:
+Our first action creator will depend on thunk middleware to handle our API call. Thunk let's us write action-creators that return functions instead of objects; this allows us to call an action-creator that makes our API request using ```fetch```, and if that promise resolves successfully, it calls a second action-creator that behaves synchronously and creates an action of the type 'RECEIVED_SONGS', with a payload of the songs we got from the API call. We'll use ```connect()``` later to allow our application to trigger the first action-creator that will eventually dispatch our 'RECEIVED_SONGS' action.
 
 ```javascript
 import fetch from 'isomorphic-fetch';
@@ -88,15 +44,17 @@ export const fetchSongs = (genreID) => {
 }
 ```
 
-What's this **isomorphic-fetch** business? Not all browsers support the new ```fetch``` API, so we use isomorphic-fetch and babel-polyfill to support behind-the-times browsers until they catch up.
+*Note on isomorphic-fetch (and babel-polyfill in our index): these polyfills make the fetch API function on browsers that don't yet support it*
 
-### songsReducer.js and rootReducer.js
+### Reducers 
 
-Reudcers take an action and the previous state, and return a new copy of state. In this case, our reducer detects an action of the type 'RECEIVED_SONGS', and returns a new copy of state with an updated songs array. If we had something in state besides songs, we would have to handle preserving that information in our new copy of state while updating the songs array, but in this case we can just return the new array. Notice that we are not mutating previous state, we're just setting state to the new array. This means we maintain our snapshot of every state change throughout the app's lifecycle. 
+##### songsReducer.js
 
-In this example, I've separated the ```songsReducer``` from the ```rootReducer```, so that the app could scale up as functionality grows, but reducer could be one file if we left the app as is. Since you can only have one reducer, we use ```combineReducers``` from Redux to compile all our reducers into one object.
+Reducers are pure functions that take the previous state and an action as arguments to update state. Our application's state is an object, and you should consider the layout of that object when designing your reducers; don't make it hard on yourself to access state later on. Reducers expect predictable output, so no putting API calls or ```Math.random()``` or mutating state in here. 
 
-**songsReducer**
+*Immutability means no functions that modify state, only functions that return new, modified copies of state while leaving the original state alone. MDN docs are great for checking whether a function mutates or returns a new copy of a data-type.*
+
+State should start as an empty array, and we can instantiate it this way by passing it to our reducer as the first argument. We pass our action as the second argument to our reducer, and then set up a ```switch``` statement to check for the action's type. If the reducer recognizes the action type, it updates state accordingly, and if not, it returns the previous state. Be aware that when we say ```state``` in a reducer, it is only referring to the part of state that it is responsible for.
 
 ```javascript
 const songs = (state = [], action) => {
@@ -111,7 +69,11 @@ const songs = (state = [], action) => {
 export default songs;
 ```
 
-**rootReducer**
+In this widget, we are using buttons to display playlists from different genres. Since we don't want to keep old genres on the page as we click buttons, we tell the reducer that the next state will be only the payload from the action passed to it. We aren't modifying the previous array in state, nor "throwing it away," we're just saying the next state will be a different array. But if we for some reason wanted a huge, messy playlist on the screen as we click around, we could write ```return [...state, ...action.songs]```. This would copy our previous state and our next array of songs into one, new array.
+
+##### rootReducer.js
+
+As applications grow, there is more state to manage, which means more actions, and more reducers. We only have one store, and our reducer is how we model that store. We need a way to combine all the reducers we end up with into a single object. We could hand-roll this, but Redux provides us with the ```combineReducers``` utility that handles everything. We import all of our actions into our ```rootReducer``` file and pass them into ```combineReducers```, which calls all of the reducers being passed to it, and creates one object with the results. If nothing changes, previous state is returned.
 
 ```javascript
 import { combineReducers } from 'redux';
@@ -125,22 +87,46 @@ const rootReducer = combineReducers({
 export default rootReducer;
 ```
 
-##### Aside: Mutating State
-Don't mutate state? What? In a nutshell, if something modifies the original state instead of returning a new copy, don't do it in Redux. array.push() and array.unshift() are no-no's. There are whole articles on this, but get comfortable using the spread operator and object.assign to instantiate empty arrays or objects, and then copy the info you need into them to return the next state.
+### The Store 
 
-### Cool, now what?
+We've been mentioning "state" and "store" a lot. The store is a big object that holds our state, and we only get one. We use ```createStore()``` to build this object. ```createStore()``` takes three arguments: the rootReducer, pre-loaded state (here we're hooking our app up to Chrome devTools, in case the application is being used in Chrome and has the Redux extension installed), and an enhancer, which is a function. The enhancer we're using is ```applyMiddleware()```, which comes out of the box with Redux. This let's logger and thunk interact with the store (logger console logs state; it might be overkill if you're already using the Chrome devTools extension, but it nicely illustrates how store responds to async events).
 
-So we've handled the Redux-side of things, how do we get this data to our React application?
+```javascript
+import React from 'react';
+import { render } from 'react-dom';
+import { Provider } from 'react-redux';
+import thunk from 'redux-thunk';
+import logger from 'redux-logger';
+import { createStore, applyMiddleware } from 'redux';
+import 'babel-polyfill';
 
-### Containers 
+import './index.css';
+import AppContainer from './containers/AppContainer';
+import rootReducer from './reducers/index';
+import registerServiceWorker from './registerServiceWorker';
 
-Containers are how our Redux store gets tied to our React application. They're like a wrapper around a component with specific instructions on how to interact with the store.
+const devTools = window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
+const store = createStore(rootReducer, devTools, applyMiddleware(logger, thunk));
 
-In this case, we import the component we need to connect to the store, as well as the actions the component needs to dispatch, into our **AppContainer.js**. We use the function ```mapStateToProps``` to describe the pieces of state we want the Redux store to pass to our component; in this case, the store only holds one thing and we need it, so we'll pass the whole thing to ```<App />```. But we could easily trim that down if we had a bunch of data in the store but only a bit had to be passed to ```<App />```.
+const Root = () => {
+  return (
+    <Provider store={ store }>
+      <AppContainer />
+    </Provider>
+  )
+}
 
-The ```mapDispatchToProps``` function is how we describe the actions a component is able to dispatch. There are a few way to handle this, as it can take functions or objects as arguments. In our example, we're passing it an object with a key identical to the matching action-creator's name as a key, and the corresponding action-creator wrapped in a dispatch call as the value. This let's call the action-creator by name once it's passed to the component as props. 
+render(<Root />, document.getElementById('root'));
+registerServiceWorker();
+```
 
-We bundle these functions and tie them to our component with the ```connect``` API from react-redux.
+### Time For Some React
+
+We've set up the data side of our application. Let's connect it to React.
+
+Our simple widget will be just a single container component. React has presentational and container components; presentational components are just concerned with the view and don't know anything about Redux, while container components can access and interact with state by dispatching actions and subscribing to the store.
+
+We leverage ```connect()``` from ```react-redux``` to describe how a React component should interact with state. Write an ```AppContainer.js``` file that imports our component. 
 
 ```javascript
 import { connect } from 'react-redux';
@@ -161,92 +147,64 @@ const mapDispatchToProps = (dispatch) => {
 export default connect(mapStateToProps, mapDispatchToProps)(App);
 ```
 
-### TL;DR or Snout-To-Tail 
+We want our ```<App />``` component to be able to make our API call, as well as have access to the songs it returns. ```mapStateToProps``` is a function that describes what pieces of state we want passed to a component as props. In our case, we'll just grab all of state since it's only a single, small array. ```mapDispatchToProps``` allows us to inject a prop into ```<App />``` called ```fetchSongs``` that calls our fetchSongs action-creator, and eventually dispatches our 'RECEIVED_SONGS' action if all goes well.
 
-This can be a lot to think about. Let's run through this from a user's perspective and see what is going on.
+We bundle these together with ```connect()```, and can now use our ```<AppContainer />``` component in our markup. 
 
-The page loads, and our state is an empty array.
-
-```javascript
-songs: []
-```
-
-We click a genre button. Our ```<AppContainer />``` has made us able to dispatch ```fetchSongs``` by passing it to ```<App />``` as props. We add an onClick handler to our buttons that is a callback to the ```fetchSongs``` action-creator we pulled in from props. Each button is individually passed the genreID it needs to render the correct content from the API.
-
-As far as logger knows, nothing in our store has changed yet, because it has no idea ```fetchSongs``` is an asynchronous action. It sees that an action has been dispatched, but the ```fetchSongs``` action so far doesn't update the store, so it logs the previous state of an empty array, the dispatched action, and the next state, also an empty array.
-
-While logger is console logging this potentially confusing information, our API call is being made, and the promise (hopefully) resolves. This fires our second action-creator, and passes our 'RECEIVED_SONGS' action the payload of a songs array from the API call. Our reducer picks up the 'RECEIVED_SONGS' action and updates the store with the new data.
+Here's what our ```<App />``` component, which is now connected to the store via ```<AppContainer />```, looks like:
 
 ```javascript
-songs: [
-    {
-      id: 49,
-      artist: 'ZHU',
-      title: 'In The Morning',
-      service: 'youtube',
-      video: 'https://www.youtube.com/watch?v=5_ARibfCMhw',
-      genre_id: 8
-    },
-    {
-      id: 50,
-      artist: 'The Knife',
-      title: 'Heartbeats',
-      service: 'youtube',
-      video: 'https://www.youtube.com/watch?v=pPD8Ja64mRU',
-      genre_id: 8
-    },
-    {
-      id: 51,
-      artist: 'Mat Zo',
-      title: 'Soul Food',
-      service: 'youtube',
-      video: 'https://www.youtube.com/watch?v=eubJfCm_8cE',
-      genre_id: 8
-    },
-    {
-      id: 52,
-      artist: 'Daft Punk',
-      title: 'Giorgio by Moroder',
-      service: 'youtube',
-      video: 'https://www.youtube.com/watch?v=zhl-Cs1-sG4&list=PLcdN8reXV1kyF2mzYDoC5tDi0K2NpCU-G&index=3',
-      genre_id: 8
-    },
-    {
-      id: 53,
-      artist: 'Justice',
-      title: 'D.A.N.C.E.',
-      service: 'youtube',
-      video: 'https://www.youtube.com/watch?v=sy1dYFGkPUE',
-      genre_id: 8
-    },
-    {
-      id: 54,
-      artist: 'Dada Life',
-      title: 'Happy Violence',
-      service: 'youtube',
-      video: 'https://www.youtube.com/watch?v=e0AD3w67_-o',
-      genre_id: 8
-    },
-    {
-      id: 55,
-      artist: 'The Bloody Beetroots',
-      title: 'Rocksteady',
-      service: 'youtube',
-      video: 'https://www.youtube.com/watch?v=KSqttO3NtCg&list=PLpDK3uy-TwXriLVM9jYg6AhKDY-dDEOgs',
-      genre_id: 8
-    }
-  ]
+import React, { Component } from 'react';
+import '../styles/App.css';
+
+class App extends Component {
+  
+  render() {
+    const { fetchSongs, songs } = this.props;
+    
+    return (
+      <div className="App">
+        
+        <h1>Click A Genre To See A Playlist</h1>
+        <div className="btn-wrapper">
+          <button onClick={ () => fetchSongs(1) } >Trance</button>
+          <button onClick={ () => fetchSongs(2)} >House</button>
+          <button onClick={ () => fetchSongs(3) } >Big Room House</button>
+          <button onClick={ () => fetchSongs(4) } >Drum and Bass</button>
+          <button onClick={ () => fetchSongs(5) } >Dubstep</button>
+          <button onClick={ () => fetchSongs(6) } >Hardstyle</button>
+          <button onClick={ () => fetchSongs(7) } >Trap</button>
+          <button onClick={ () => fetchSongs(8) } >Electro</button>
+          <button onClick={ () => fetchSongs(9) } >Moombahton</button>
+          <button onClick={ () => fetchSongs(10) } >Wildcards</button>
+        </div>
+        
+        { songs.map((song) => 
+          <div className="track-card" key={song.id}>
+            <a href={ song.video } target="_blank">
+              <p>{ song.artist }, { song.title }</p>
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  }
+}
+
+export default App;
 ```
 
-Our ```<AppContainer />``` that has subscribed to changes in state with mapStateToProps passes this new information to the ```<App />``` component as... you guessed it, props. 
 
-![Imgur](http://i.imgur.com/oYGvLvh.png)
+### TL;DR or Snout-To-Tail
 
-In ```<App />``` we've told it to look at the songs array in props, and to map over it and create a YouTube link for each song. When the application initializes, the array is empty, so nothing gets rendered. However, once React's props are changes, it re-renders based on the new information it is being passed. 
+Let's step through this from a user's perspective. The application loads, and Redux dispatches an '@@INIT' action; our reducer doesn't know what this action is, so logger records it as being undefined. 
+
+*Note that the timestamp logger writes for the "undefined" '@@INIT' action is incorrect, look to Redux devTools if you want an accurate timestamp. If you switch the order of the arguments we passed to applyMiddleware(), logger will not console log this undefined '@@INIT' action or the asynchronous API action. It will only console log our 'RECEIVED_SONGS' action, because thunk gets in the way and handles our API call before it gets to logger.*
+
+Our store is built, an empty songs array and ```fetchSongs``` are injected into ```<App />``` as props via our ```<AppContainer />```. We click a genre button, which calls ```fetchSongs()```, and passes it the appropriate genreID for our API call. Logger tells us our asynchronous action has been dispatched, and logs that next state remains an empty songs array, because the promise in our API call hasn't resolved yet. So our software hits the ```default``` part of our ```switch``` statement in the reducer.
 
 
+![Imgur](http://i.imgur.com/ldatwwj.png)
 
-
-
-
+Then the promise in the API call resolves, and dispatches 'RECEIVED_SONGS' with the results of of our request as the payload. Our reducer calculates the next state and updates the store. Our React application has subscribed to store updates, and detects that our ```<AppContainer />``` has passed updated props to ```<App />```. The ```<App />``` component knows to map over **this.props.songs** and render a link for each item in the array. The virtual DOM compares its updated elements, and re-renders only what has changed. In this case, it renders our links below our buttons, leaving the rest of the page alone.
 
