@@ -240,7 +240,7 @@ songs: [
 
 Our ```<AppContainer />``` that has subscribed to changes in state with mapStateToProps passes this new information to the ```<App />``` component. 
 
-![App props](http://imgur.com/a/RmWAC)
+![Imgur](http://i.imgur.com/oYGvLvh.png)
 
 In ```<App />``` we've told it to look at the songs array in props, and to map over it and create a YouTube link for each song. When the application initializes, the array is empty, so nothing gets rendered. However, once React's props are changes, it re-renders based on the new information it is being passed. 
 
