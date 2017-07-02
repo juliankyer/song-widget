@@ -238,7 +238,7 @@ songs: [
   ]
 ```
 
-Our ```<AppContainer />``` that has subscribed to changes in state with mapStateToProps passes this new information to the ```<App />``` component. 
+Our ```<AppContainer />``` that has subscribed to changes in state with mapStateToProps passes this new information to the ```<App />``` component as... you guessed it, props. 
 
 ![Imgur](http://i.imgur.com/oYGvLvh.png)
 
