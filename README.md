@@ -17,8 +17,7 @@ Get a new Create React App up and running, and clear out all of the stock conten
 
 Then, install your dependencies. We'll cover these as we go.
 
-```npm install --save isomorphic-fetch redux redux-logger redux-thunk react-redux
-babel-polyfill```
+```npm install --save isomorphic-fetch redux redux-logger redux-thunk react-redux babel-polyfill```
 
 ### index.js
 
