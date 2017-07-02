@@ -89,7 +89,7 @@ export default rootReducer;
 
 ### The Store 
 
-We've been mentioning "state" and "store" a lot. The store is a big object that holds our state, and we only get one. We use ```createStore()``` to build this object. ```createStore()``` takes three arguments: the rootReducer, pre-loaded state (here we're hooking our app up to Chrome devTools, in case the application is being used in Chrome and has the Redux extension installed), and an enhancer, which is a function. The enhancer we're using is ```applyMiddleware()```, which comes out of the box with Redux. This let's logger and thunk interact with the store (logger console logs state; it might be overkill if you're already using the Chrome devTools extension, but it nicely illustrates how store responds to async events).
+We've been mentioning "state" and "store" a lot. The store is a big object that holds our state, and we only get one. We use ```createStore()``` to build this object. ```createStore()``` takes three arguments: the rootReducer, pre-loaded state (here we're hooking our app up to Chrome devTools, in case the application is being used in Chrome and has the Redux extension installed), and an enhancer, which is a function. The enhancer we're using is ```applyMiddleware()```, which comes out of the box with Redux. This let's logger and thunk interact with the store (logger console logs state changes and actions; it might be overkill if you're already using the Chrome devTools extension, but it nicely illustrates how store responds to async events).
 
 ```javascript
 import React from 'react';
