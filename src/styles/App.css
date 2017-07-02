@@ -1,0 +1,46 @@
+h1 {
+  text-transform: uppercase;
+  font-size: 20px;
+  margin-top: 30px;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.btn-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  border-bottom: 2px solid black;
+  padding-bottom: 10px;
+  margin: 10px;
+}
+
+button {
+  background-color: white;
+  color: black;
+  border: 2px solid black;
+  text-transform: uppercase;
+  width: 120px;
+  margin: 5px;
+  padding: 3px;
+}
+
+button:hover {
+  background-color: black;
+  color: white;
+}
+
+a {
+  color: black;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+a:hover {
+  color: blue;
+}
+
