@@ -1,4 +1,3 @@
-import 'babel-polyfill';
 import fetch from 'isomorphic-fetch';
 
 const receivedSongs = (songs) => {

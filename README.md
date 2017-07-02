@@ -24,6 +24,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
+import 'babel-polyfill';
 
 import thunk from 'redux-thunk';
 import logger from 'redux-logger';
@@ -52,6 +53,7 @@ Some takeaways:
 * logger is a neat package that console logs information about the Redux store
 * containers are how Redux and React components are connected
 * devTools says "hey, if you have the Redux devTools extension, let it look at the store"
+* babel-polyfill helps us use the fetch API later on
 
 
 In our index, we set instantiate our store using the createStore method, and we extend React with both logger and thunk. We wrap our entire application in a ```<Provider />``` component that makes the store we've created accessible to everything in the app.
@@ -63,7 +65,6 @@ In this simple app, we will have two action-creators. One called ```fetchSongs``
 This will fire a synchronous action ```RECEIVED_SONGS```, with a payload of the songs returned by the API call. This payload is an array of objects. The file will look like:
 
 ```javascript
-import 'babel-polyfill';
 import fetch from 'isomorphic-fetch';
 
 const receivedSongs = (songs) => {
@@ -87,7 +88,7 @@ export const fetchSongs = (genreID) => {
 }
 ```
 
-What's this isomorphic-fetch and babel-polyfill business? Not all browsers support the new ```fetch``` API, so we add these to support behind-the-times browsers until they catch up.
+What's this isomorphic-fetch business? Not all browsers support the new ```fetch``` API, so we use isomorphic-fetch and babel-polyfill to support behind-the-times browsers until they catch up.
 
 ### songsReducer.js and rootReducer.js
 
@@ -170,7 +171,7 @@ While logger is console logging this potentially confusing information, our API 
 
 Our ```<AppContainer />``` that has subscribed to changes in state with mapStateToProps passes this new information to the ```<App />``` component. 
 
-In ```<App />``` we've told it to look at the songs array in props, and to map over it and create a YouTube link for each song. When the application initializes, the array is empty, so nothing gets rendered. However, React now notices the updated props and re-renders its content accordingly. 
+In ```<App />``` we've told it to look at the songs array in props, and to map over it and create a YouTube link for each song. When the application initializes, the array is empty, so nothing gets rendered. However, React notices the updated props and re-renders its content accordingly. 
 
 
 
