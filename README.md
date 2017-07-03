@@ -126,7 +126,7 @@ We've set up the data side of our application. Let's connect it to React.
 
 Our simple widget will be just a single container component. React has presentational and container components; presentational components are just concerned with the view and don't know anything about Redux, while container components can access and interact with state by dispatching actions and subscribing to the store.
 
-We leverage ```connect()``` from ```react-redux``` to describe how a React component should interact with state. Write an ```AppContainer.js``` file that imports our component. 
+We leverage ```connect()``` from ```react-redux``` to describe how a React component should interact with state. Write an ```AppContainer.js``` file that imports our component and and the actions the component needs access to. 
 
 ```javascript
 import { connect } from 'react-redux';
