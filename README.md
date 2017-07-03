@@ -18,7 +18,7 @@ We'll set up the Redux side of things first, and then hook it up to our React ap
 
 Let's start with defining our actions. Dispatching actions is the only way we update our Redux store. Actions are plain JS objects, and we'll be using action-creators (functions that return actions) to create them.
 
-Our first action creator will depend on thunk middleware to handle our API call. Thunk let's us write action-creators that return functions instead of objects; this allows us to call an action-creator that makes our API request using ```fetch```, and if that promise resolves successfully, it calls a second action-creator that behaves synchronously and creates an action of the type 'RECEIVED_SONGS', with a payload of the songs we got from the API call. We'll use ```connect()``` later to allow our application to trigger the first action-creator that will eventually dispatch our 'RECEIVED_SONGS' action.
+Our first action creator will depend on thunk middleware to handle our API call. Thunk let's us write action-creators that return functions instead of objects; this allows us to call an action-creator that makes our API request using ```fetch```. We can then dispatch our second action in the promise of our ```fetch``` request, which will behave synchronously. This second action will have a type of 'RECEIVED_SONGS', and have a payload of the songs array returned from our API call. (We'll use ```connect()``` later to allow our Redux application to trigger the first action-creator that will eventually dispatch our 'RECEIVED_SONGS' action).
 
 ```javascript
 import fetch from 'isomorphic-fetch';
@@ -44,7 +44,7 @@ export const fetchSongs = (genreID) => {
 }
 ```
 
-*Note on isomorphic-fetch (and babel-polyfill in our index): these polyfills make the fetch API function on browsers that don't yet support it*
+*Note on isomorphic-fetch (and babel-polyfill in our index): these polyfills make the fetch API work in browsers that don't yet support it*
 
 ### Reducers 
 
@@ -54,7 +54,7 @@ Reducers are pure functions that take the previous state and an action as argume
 
 *Immutability means no functions that modify state, only functions that return new, modified copies of state while leaving the original state alone. MDN docs are great for checking whether a function mutates or returns a new copy of a data-type.*
 
-State should start as an empty array, and we can instantiate it this way by passing it to our reducer as the first argument. We pass our action as the second argument to our reducer, and then set up a ```switch``` statement to check for the action's type. If the reducer recognizes the action type, it updates state accordingly, and if not, it returns the previous state. Be aware that when we say ```state``` in a reducer, it is only referring to the part of state that it is responsible for.
+State should start as an empty array, and we can instantiate it this way by passing it to our reducer as the first argument. We pass our action as the second argument to our reducer, and then set up a ```switch``` statement to check for the action's type. If the reducer recognizes the action type, it updates state accordingly, and if not, it returns the previous state by default. Be aware that when we say ```state``` in a reducer, it is only referring to the part of state that the reducer is responsible for.
 
 ```javascript
 const songs = (state = [], action) => {
@@ -73,7 +73,7 @@ In this widget, we are using buttons to display playlists from different genres.
 
 ##### rootReducer.js
 
-As applications grow, there is more state to manage, which means more actions, and more reducers. We only get one store, and our reducer is how we model that store. We need a way to combine all the reducers we end up with into a single reducer to return a single object for our store. We could hand-roll this, but Redux provides us with the ```combineReducers``` utility that handles everything. We import all of our actions into our ```rootReducer``` file and pass them into ```combineReducers```, which calls all of the reducers being passed to it, and creates one object with the results. If nothing changes, previous state is returned.
+As applications grow, there is more state to manage, which means more actions, and more reducers. We only get one store, and our reducer is how we model that store. We need a way to combine all the reducers we end up with into a single reducer to return a single object for our store. We could hand-roll this, but Redux provides us with the ```combineReducers``` utility that handles everything. We import all of our actions into our ```rootReducer``` file and pass them into ```combineReducers```, which calls all of the reducers being passed to it, and creates one object with the results. This object is our application's next state. If nothing changes, previous state is returned.
 
 ```javascript
 import { combineReducers } from 'redux';
@@ -197,7 +197,7 @@ export default App;
 
 ### TL;DR or Snout-To-Tail
 
-Let's step through this from a user's perspective. The application loads, and Redux dispatches an '@@INIT' action; our reducer doesn't know what this action is, so logger records it as being undefined. 
+Let's step through this from a user's perspective. The application loads, and Redux dispatches an '@@INIT' action; our reducer doesn't know what this action is (but Chrome's Redux developer tools does), so logger records it as being undefined. 
 
 *Note that the timestamp logger writes for the "undefined" '@@INIT' action is incorrect, look to Redux devTools if you want an accurate timestamp. If you switch the order of the arguments we passed to applyMiddleware(), logger will not console log this undefined '@@INIT' action or the asynchronous API action. It will only console log our 'RECEIVED_SONGS' action, because thunk gets in the way and handles our API call before it gets to logger.*
 
@@ -206,5 +206,5 @@ Our store is built, an empty songs array and ```fetchSongs``` are injected into 
 
 ![Imgur](http://i.imgur.com/ldatwwj.png)
 
-Then the promise in the API call resolves, and dispatches 'RECEIVED_SONGS' with the results of of our request as the payload. Our reducer calculates the next state and updates the store. Our React application has subscribed to store updates, and detects that our ```<AppContainer />``` has passed updated props to ```<App />```. The ```<App />``` component knows to map over **this.props.songs** and render a link for each item in the array; when **this.props.songs** updates, ```<App />``` maps over the updated songs array and updates the virtual DOM with the new list of links. The virtual DOM compares its updated elements, and re-renders only what has changed. In this case, it renders our links below our buttons, leaving the rest of the page alone.
+Then the promise in the API call resolves, and dispatches 'RECEIVED_SONGS' with the results of our request as the payload. Our reducer calculates the next state and updates the store. Our React application has subscribed to store updates, and detects that our ```<AppContainer />``` has passed updated props to ```<App />``` from the store. The ```<App />``` component knows to map over **this.props.songs** and render a link for each item in the array; when **this.props.songs** updates, ```<App />``` maps over the updated songs array and updates the virtual DOM with the new list of links. The virtual DOM compares its updated elements, and re-renders only what has changed. In this case, it renders our links below our buttons, leaving the rest of the page alone.
 
