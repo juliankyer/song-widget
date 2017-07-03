@@ -73,7 +73,7 @@ In this widget, we are using buttons to display playlists from different genres.
 
 ##### rootReducer.js
 
-As applications grow, there is more state to manage, which means more actions, and more reducers. We only have one store, and our reducer is how we model that store. We need a way to combine all the reducers we end up with into a single object. We could hand-roll this, but Redux provides us with the ```combineReducers``` utility that handles everything. We import all of our actions into our ```rootReducer``` file and pass them into ```combineReducers```, which calls all of the reducers being passed to it, and creates one object with the results. If nothing changes, previous state is returned.
+As applications grow, there is more state to manage, which means more actions, and more reducers. We only get one store, and our reducer is how we model that store. We need a way to combine all the reducers we end up with into a single reducer to return a single object for our store. We could hand-roll this, but Redux provides us with the ```combineReducers``` utility that handles everything. We import all of our actions into our ```rootReducer``` file and pass them into ```combineReducers```, which calls all of the reducers being passed to it, and creates one object with the results. If nothing changes, previous state is returned.
 
 ```javascript
 import { combineReducers } from 'redux';
