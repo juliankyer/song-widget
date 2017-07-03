@@ -197,7 +197,7 @@ export default App;
 
 ### TL;DR or Snout-To-Tail
 
-Let's step through this from a user's perspective. The application loads, our store is created, and Redux dispatches an '@@INIT' action; our reducer doesn't know what this action is, so logger records it as being undefined. 
+Let's step through this from a user's perspective. The application loads, and Redux dispatches an '@@INIT' action; our reducer doesn't know what this action is, so logger records it as being undefined. 
 
 *Note that the timestamp logger writes for the "undefined" '@@INIT' action is incorrect, look to Redux devTools if you want an accurate timestamp. If you switch the order of the arguments we passed to applyMiddleware(), logger will not console log this undefined '@@INIT' action or the asynchronous API action. It will only console log our 'RECEIVED_SONGS' action, because thunk gets in the way and handles our API call before it gets to logger.*
 
